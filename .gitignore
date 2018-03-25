@@ -1,0 +1,11 @@
+*.uff
+*.mat
+*.gif
+*.m~
+*.csv
+*.npy
+bin/
+development/
+__pycache__/
+output/
+.idea/
