@@ -48,6 +48,8 @@ def create_dataset(img_rows=128, img_cols=128):
             # save the corresponding mask to masks np.ndarray (at the same index)
             masks[idx] = mask
 
+            idx += 1
+
     print('Created 2 np.ndarrays containing images & masks.')
 
     # Create directory to store files.
@@ -62,4 +64,4 @@ def create_dataset(img_rows=128, img_cols=128):
 
 
 if __name__ == '__main__':
-    #create_dataset(img_rows=128, img_cols=128)
+    create_dataset(img_rows=128, img_cols=128)

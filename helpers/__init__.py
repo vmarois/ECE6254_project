@@ -8,5 +8,7 @@
 # Import lines for functions in this module
 
 from . import acquisition
+from . import augmentation
 
 from .acquisition import load_mhd_data
+from .augmentation import data_augmentation_pipeline, rotate_dataset, shift_dataset, contrast_stretching_dataset
