@@ -8,10 +8,16 @@ import os
 import scipy.ndimage.interpolation as interpol
 from skimage import exposure
 from skimage.transform import resize
+from scipy.ndimage.filters import gaussian_filter
 from .acquisition import *
 
 
-def data_augmentation_pipeline(img_rows=128, img_cols=128, rotation=True, shift=True, flip=True, contrast=True):
+def data_augmentation_pipeline(img_rows=128, img_cols=128,
+                               rotation=True,
+                               shift=True,
+                               flip=True,
+                               contrast=True,
+                               blur=True):
     """
     Loop over the data/ directory to retrieve each image & its associated ground truth segmentation mask.
     Apply the data augmentation techniques if the corresponding flag is true:
@@ -24,7 +30,8 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128, rotation=True, shift=
         - Increase contrast of the images using the contrast stretching method with the 4th & 96th percentiles as cutoff
     points. See http://homepages.inf.ed.ac.uk/rbf/HIPR2/stretch.htm for more detail. No need to apply this modification
     on the segmentation masks.
-
+    :param blur: flag to apply or not gaussian blur on the dataset. If yes:
+        - Apply a blur with sigma = 0.6.
     Resizes the images & masks to (img_rows, img_cols).
     The images & their variants are stored into different .npy files.
     """
@@ -59,6 +66,11 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128, rotation=True, shift=
     if contrast:
         print(' Contrast stretching with the 4th & 96th percentiles as cutoff points')
         contrast_images = np.ndarray((2 * len(patients), img_rows, img_cols), dtype=np.uint8)
+
+    if blur:
+        print(' Gaussian Blur with sigma = 0.6')
+        sigma = 0.6
+        blurred_images = np.ndarray((2 * len(patients), img_rows, img_cols), dtype=np.uint8)
 
     # we now go through each patient's directory :
     idx = 0
@@ -124,6 +136,12 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128, rotation=True, shift=
 
                 contrast_images[idx] = img_rescale
 
+            if blur:
+                blurred_img = gaussian_filter(img, sigma)
+                blurred_img = resize(blurred_img, (img_cols, img_rows), mode='reflect', preserve_range=True)
+
+                blurred_images[idx] = blurred_img
+
             # resize the img & the mask to (img_rows, img_cols) to keep the network input manageable
             img = resize(img, (img_cols, img_rows), mode='reflect', preserve_range=True)
             mask = resize(mask, (img_cols, img_rows), mode='reflect', preserve_range=True)
@@ -156,6 +174,9 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128, rotation=True, shift=
 
     if contrast:
         np.save('output/augmented_data/contrast_images.npy', contrast_images)
+
+    if blur:
+        np.save('output/augmented_data/blurred_images.npy', blurred_images)
 
     print('Data augmentation by rotation done.')
 
