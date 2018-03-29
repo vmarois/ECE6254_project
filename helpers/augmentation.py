@@ -11,7 +11,7 @@ from skimage.transform import resize
 from .acquisition import *
 
 
-def data_augmentation_pipeline(img_rows=128, img_cols=128, rotation=True, shift=True, contrast=True):
+def data_augmentation_pipeline(img_rows=128, img_cols=128, rotation=True, shift=True, flip=True, contrast=True):
     """
     Loop over the data/ directory to retrieve each image & its associated ground truth segmentation mask.
     Apply the data augmentation techniques if the corresponding flag is true:
@@ -19,6 +19,7 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128, rotation=True, shift=
         - Use the same rotation angle for images of a same patient. Randomly select a rotation angle in [-10°, +10°]
     :param shift: flag to apply or not shifting on the dataset. If yes:
         - Use the same shift offset for images of a same patient. Randomly select an offset in [-10, +10]
+    :param flip: flag to apply or not flipping (vertically) on the dataset.
     :param contrast: flag to apply or not contrast stretching on the dataset. If yes:
         - Increase contrast of the images using the contrast stretching method with the 4th & 96th percentiles as cutoff
     points. See http://homepages.inf.ed.ac.uk/rbf/HIPR2/stretch.htm for more detail. No need to apply this modification
@@ -46,9 +47,14 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128, rotation=True, shift=
     if shift:
         print(' Shifting by a random offset within [-10, +10]')
         # range of offsets
-        offsets = np.arange(-10, 11, 1)
+        offsets = np.arange(-30, 31, 1)
         shifted_images = np.ndarray((2 * len(patients), img_rows, img_cols), dtype=np.uint8)
         shifted_masks = np.ndarray((2 * len(patients), img_rows, img_cols), dtype=np.uint8)
+
+    if flip:
+        print(' Flipping vertically')
+        flipped_images = np.ndarray((2 * len(patients), img_rows, img_cols), dtype=np.uint8)
+        flipped_masks = np.ndarray((2 * len(patients), img_rows, img_cols), dtype=np.uint8)
 
     if contrast:
         print(' Contrast stretching with the 4th & 96th percentiles as cutoff points')
@@ -73,14 +79,15 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128, rotation=True, shift=
             mask, _, _, _ = load_mhd_data('data/{pa}/{pa}_4CH_{ph}_gt.mhd'.format(pa=patient, ph=phase))
 
             if rotation:
-                # rotate image & mask by same angle
-                rotated_img = interpol.rotate(img, rot_angle, axes=(1, 0), reshape=False, output=None, order=3, mode='constant',
-                                      cval=0.0, prefilter=True)  # uses spline interpolation (deg 3)
-                rotated_mask = interpol.rotate(mask, rot_angle, axes=(1, 0), reshape=False, output=None, order=3, mode='constant',
-                                       cval=0.0, prefilter=True)
+                # resize first, then rotate image & mask by same angle
 
-                rotated_img = resize(rotated_img, (img_cols, img_rows), mode='reflect', preserve_range=True)
-                rotated_mask = resize(rotated_mask, (img_cols, img_rows), mode='reflect', preserve_range=True)
+                rotated_img = resize(img, (img_cols, img_rows), mode='reflect', preserve_range=True)
+                rotated_mask = resize(mask, (img_cols, img_rows), mode='reflect', preserve_range=True)
+
+                rotated_img = interpol.rotate(rotated_img, rot_angle, axes=(1, 0), reshape=False, output=None, order=1, mode='constant',
+                                      cval=0.0, prefilter=True)  # uses simple interpolation (deg 1)
+                rotated_mask = interpol.rotate(rotated_mask, rot_angle, axes=(1, 0), reshape=False, output=None, order=1, mode='constant',
+                                       cval=0.0, prefilter=True)
 
                 rotated_images[idx] = rotated_img
                 rotated_masks[idx] = rotated_mask
@@ -97,6 +104,16 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128, rotation=True, shift=
 
                 shifted_images[idx] = shifted_img
                 shifted_masks[idx] = shifted_mask
+
+            if flip:
+                flipped_img = np.flip(img, axis=1)
+                flipped_mask = np.flip(mask, axis=1)
+
+                flipped_img = resize(flipped_img, (img_cols, img_rows), mode='reflect', preserve_range=True)
+                flipped_mask = resize(flipped_mask, (img_cols, img_rows), mode='reflect', preserve_range=True)
+
+                flipped_images[idx] = flipped_img
+                flipped_masks[idx] = flipped_mask
 
             if contrast:
                 # Contrast stretching
@@ -132,6 +149,10 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128, rotation=True, shift=
     if shift:
         np.save('output/augmented_data/shifted_images.npy', shifted_images)
         np.save('output/augmented_data/shifted_masks.npy', shifted_masks)
+
+    if flip:
+        np.save('output/augmented_data/flipped_images.npy', flipped_images)
+        np.save('output/augmented_data/flipped_masks.npy', flipped_masks)
 
     if contrast:
         np.save('output/augmented_data/contrast_images.npy', contrast_images)
