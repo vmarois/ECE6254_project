@@ -9,6 +9,8 @@
 
 from . import acquisition
 from . import augmentation
+from . import preprocessing
 
 from .acquisition import load_mhd_data
 from .augmentation import data_augmentation_pipeline, rotate_dataset, shift_dataset, contrast_stretching_dataset
+from .preprocessing import getRoi, findCenter, findMainOrientation
