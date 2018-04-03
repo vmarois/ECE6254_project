@@ -63,5 +63,59 @@ def create_dataset(img_rows=128, img_cols=128):
     print('Saving to .npy files done.')
 
 
+def concatenate_datasets(filenames_list):
+    """
+    Concatenate the datasets (.npy files) contained in output/augmented_data into 1.
+    We also use the segmentation masks to compute the center & main orientation of the left ventricle
+    :param filenames_list: list of tuples specifying the pairs of images & masks:
+        [(images, masks), (rotated_images, rotated_masks)..]
+    :return: whole set of images + ground truth values for center, orientation saved to .npy files
+    """
+    print('Concatenating the datasets created by data augmentation into a single one')
+    # total number of images
+    n_samples = 600 * len(filenames_list)
+
+    # create np.ndarrays for the images and the targets: xCenter, yCenter, xOrientation, yOrientation
+    images_dataset = np.ndarray((n_samples, 128, 128), dtype=np.uint8)
+    targets_dataset = np.ndarray((n_samples, 4), dtype=np.float32)
+
+    for ds, (img, mask) in enumerate(filenames_list):
+        print(" Processing {}".format(img))
+        images = np.load("output/augmented_data/{}.npy".format(img))
+        masks = np.load("output/augmented_data/{}.npy".format(mask))
+
+        for idx, mat in enumerate(masks):
+
+            # get the center coordinates of the left ventricle (on the resized image)
+            row, col = findCenter(img=mat, pixelvalue=1)
+
+            # get the orientation of the left ventricle (on the resized image)
+            x_v1, y_v1 = findMainOrientation(img=mat, pixelvalue=1)
+
+            # save the center coordinates & orientation to the y dataframe (which will be the output of the network)
+            targets_dataset[ds*600 + idx] = np.array([row, col, x_v1, y_v1])
+
+            # save image in main dataset file
+            images_dataset[ds*600 + idx] = images[idx]
+
+    # save all ndarrays to a .npy files (for faster loading later)
+    # Create directory to store files.
+    directory = os.path.join(os.getcwd(), 'output/processed_data/')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    np.save('output/processed_data/images.npy', images_dataset)
+    np.save('output/processed_data/targets.npy', targets_dataset)
+    print('Saving to .npy files done.')
+
+
 if __name__ == '__main__':
-    create_dataset(img_rows=128, img_cols=128)
+    #create_dataset(img_rows=128, img_cols=128)
+    #data_augmentation_pipeline(img_rows=128, img_cols=128,rotation=True,shift=True,flip=True,contrast=True,blur=True)
+    filenames_list = [('images', 'masks'),
+                      ('rotated_images', 'rotated_masks'),
+                      ('shifted_images', 'shifted_masks'),
+                      ('flipped_images', 'flipped_masks'),
+                      ('contrast_images', 'masks'),
+                      ('blurred_images', 'masks')]
+    #concatenate_datasets(filenames_list=filenames_list)
