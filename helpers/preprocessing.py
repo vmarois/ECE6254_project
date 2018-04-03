@@ -21,28 +21,20 @@ def getRoi(image, pixelvalue):
 
 def findCenter(img, pixelvalue):
     """
-    This function returns the center coordinates of the different connected regions of an image.
-    We consider only the pixels for which their value is equal to pixelvalue
+    This function returns the center coordinates of the specified region of an image.
+    We consider only the pixels for which their intensity is equal to pixelvalue
     :param img: input image
     :param pixelvalue: int, specify which pixels to select.
-    :return: ([x1, x2 ... xn], [y1, y2 ... yn]) where xi,yi are the coordinates of the ith region detected in the
-    image (total of n regions). If only one region is detected, the 2 coordinates are returned as a tuple (x,y).
+    :return: tuple (x,y).
     """
-    # use a boolean mask to select pixels of interest (intensity == pixelvalue)
-    blobs = (img == pixelvalue)
-    # label the n connected regions that satisfy this condition
-    labels, nlabels = ndimage.label(blobs)
-    # Find their unweighted centroids
-    r, c = np.vstack(ndimage.center_of_mass(blobs, labels, np.arange(nlabels) + 1)).T  # returned as np.ndarray
+    # get coordinates of pixels of interest (intensity == pixelvalue)
+    y, x = np.where(img == pixelvalue)
 
-    # round the values to int (since pixel coordinates)
-    r = np.round(r).astype(int)
-    c = np.round(c).astype(int)
+    # compute center coordinates as mean of the indices
+    r = np.mean(y).astype(int)
+    c = np.mean(x).astype(int)
 
-    if nlabels == 1:  # if only 1 label, return a simple tuple
-        return r[0], c[0]
-    else:
-        return r.tolist(), c.tolist()
+    return r, c
 
 
 def findMainOrientation(img, pixelvalue):
