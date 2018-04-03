@@ -123,6 +123,48 @@ def concatenate_datasets(filenames_list):
     print('Saving to .npy files done.')
 
 
+def load_train_data(model, img_rows=128, img_cols=128):
+    """
+        Loading training data & doing some additional preprocessing on it. If the indicated model is a dnn, we flatten out
+        the input images. If the indicated model is a cnn, we put the channels first.
+        :param model: string to indicate the type of model to prepare the data for. Either 'dnn' or 'cnn'
+        :param img_rows: the new x-axis dimension used to resize the images
+        :param img_cols: the new y-axis dimension used to resize the images
+        :return: images& target features as numpy arrays.
+        """
+    print('#' * 30)
+    print('Loading data from file.')
+
+    # read in the .npy file containing the images
+    images_train = np.load('output/processed_data/images_train.npy')
+
+    # read in the .npy file containing the target features
+    targets_train = np.load('output/processed_data/targets_train.npy')
+
+    # scale image pixel values to [0, 1]
+    images_train = images_train.astype(np.float32)
+    images_train /= 255.
+
+    # scale target center coordinates to [-1, 1] (from 0 to 95 initially)
+    targets_train = targets_train.astype(np.float32)
+    targets_train[:, 0] = (targets_train[:, 0] - (img_rows / 2)) / (img_rows / 2)
+    targets_train[:, 1] = (targets_train[:, 1] - (img_rows / 2)) / (img_cols / 2)
+
+    # reshape images according to the neural network model intended to be used
+    if model == 'cnn':
+        print('Indicated model is a CNN, reshaping images with channels first.')
+        images_train = images_train.reshape(-1, 1, img_rows, img_cols)
+    elif model == 'dnn':
+        print('Indicated model is a DNN, flattening out images.')
+        images_train = images_train.reshape(images_train.shape[0], img_rows * img_rows)
+
+    print('Loading & processing done. Pixel image values have been scaled to [0, 1],'
+          'and target center coordinates to [-1, 1].')
+    print('#' * 30)
+
+    return images_train, targets_train
+
+
 if __name__ == '__main__':
     #create_dataset(img_rows=128, img_cols=128)
     #data_augmentation_pipeline(img_rows=128, img_cols=128,rotation=True,shift=True,flip=True,contrast=True,blur=True)
@@ -132,15 +174,6 @@ if __name__ == '__main__':
                       ('flipped_images', 'flipped_masks'),
                       ('contrast_images', 'masks'),
                       ('blurred_images', 'masks')]
-    concatenate_datasets(filenames_list=filenames_list)
+    #concatenate_datasets(filenames_list=filenames_list)
 
-    img_tr = np.load('output/processed_data/images_train.npy')
-    print(img_tr.shape)
-    targets_tr = np.load('output/processed_data/targets_train.npy')
-    print(targets_tr.shape)
-
-    img_te = np.load('output/processed_data/images_test.npy')
-    print(img_te.shape)
-    targets_te = np.load('output/processed_data/targets_test.npy')
-    print(targets_te.shape)
-g
+    #img_tr, targets_tr = load_train_data(model='cnn',  img_rows=128, img_cols=128)
