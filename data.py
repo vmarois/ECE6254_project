@@ -7,6 +7,7 @@
 import os
 import numpy as np
 from skimage.transform import resize
+from sklearn.model_selection import train_test_split
 from helpers import *
 
 
@@ -98,14 +99,27 @@ def concatenate_datasets(filenames_list):
             # save image in main dataset file
             images_dataset[ds*600 + idx] = images[idx]
 
+    print('Concatenated all datasets into one & created target values')
+
+    print('Splitting the dataset into 70% training & 30% testing')
+    images_train, images_test, targets_train, targets_test = train_test_split(images_dataset, targets_dataset,
+                                                                              test_size=0.3,
+                                                                              random_state=42,
+                                                                              shuffle=True)
+
     # save all ndarrays to a .npy files (for faster loading later)
     # Create directory to store files.
     directory = os.path.join(os.getcwd(), 'output/processed_data/')
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    np.save('output/processed_data/images.npy', images_dataset)
-    np.save('output/processed_data/targets.npy', targets_dataset)
+    # save training set to file
+    np.save('output/processed_data/images_train.npy', images_train)
+    np.save('output/processed_data/targets_train.npy', targets_train)
+
+    # save testing set to file
+    np.save('output/processed_data/images_test.npy', images_test)
+    np.save('output/processed_data/targets_test.npy', targets_test)
     print('Saving to .npy files done.')
 
 
@@ -118,4 +132,15 @@ if __name__ == '__main__':
                       ('flipped_images', 'flipped_masks'),
                       ('contrast_images', 'masks'),
                       ('blurred_images', 'masks')]
-    #concatenate_datasets(filenames_list=filenames_list)
+    concatenate_datasets(filenames_list=filenames_list)
+
+    img_tr = np.load('output/processed_data/images_train.npy')
+    print(img_tr.shape)
+    targets_tr = np.load('output/processed_data/targets_train.npy')
+    print(targets_tr.shape)
+
+    img_te = np.load('output/processed_data/images_test.npy')
+    print(img_te.shape)
+    targets_te = np.load('output/processed_data/targets_test.npy')
+    print(targets_te.shape)
+g
