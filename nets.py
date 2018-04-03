@@ -10,6 +10,10 @@ from keras.optimizers import SGD
 from keras.callbacks import EarlyStopping, LearningRateScheduler
 from keras import backend as K
 
+import os
+import numpy as np
+from data import load_data
+
 #   PARAMETERS  #
 num_classes = 4  # 4 target features to output
 epochs = 25  # number of training epochs (on full dataset)
@@ -60,5 +64,52 @@ def cnn_model():
     return model
 
 
+def train_cnn_model():
+
+    # load training data
+    X_train, y_train = load_data(model='cnn', set='train', img_rows=img_rows, img_cols=img_cols)
+
+    # get CNN model
+    model = cnn_model()
+
+    # initialize dynamic change of learning rate : We start at the value of 'lr_start_cnn' and decrease it every epoch
+    # to get to the final value of 'lr_stop_cnn'
+    # initialize early stop : stop training if the monitored metric does not change for 'patience' epochs
+    learning_rate = np.linspace(lr_start_cnn, lr_stop_cnn, epochs)
+    change_lr = LearningRateScheduler(lambda epoch: float(learning_rate[epoch]))
+    early_stop = EarlyStopping(monitor='loss', patience=10)
+
+    # fit model on training data
+    hist = model.fit(X_train, y_train, epochs=epochs, callbacks=[change_lr, early_stop], verbose=1)
+
+    # load test data
+    X_test, y_test = load_data(model='cnn', set='test', img_rows=img_rows, img_cols=img_cols)
+
+    # evaluate the model on the test data
+    score = model.evaluate(X_test, y_test, verbose=1)
+    print('Test mean squared error:', score[0])
+    print('Test accuracy:', score[1])
+
+    # Create directory to store metrics evolution to file.
+    directory = os.path.join(os.getcwd(), 'output/metrics_evolution/')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    # save metrics evolution
+    np.savetxt('output/metrics_evolution/cnn_model_loss_{}.csv'.format(img_rows), hist.history['loss'])
+    np.savetxt('output/metrics_evolution/cnn_model_acc_{}.csv'.format(img_rows), hist.history['acc'])
+    print('Saved metrics evolution during training to file.')
+
+    # Create directory to store model to file.
+    directory = os.path.join(os.getcwd(), 'output/models/')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    # save model
+    model.save('output/models/cnn_model_{}.h5'.format(img_rows))
+    print('CNN model saved to .h5 file.')
+
+
 if __name__ == '__main__':
-    cnn_model = cnn_model()
+    #cnn_model = cnn_model()
+    train_cnn_model()
