@@ -123,23 +123,24 @@ def concatenate_datasets(filenames_list):
     print('Saving to .npy files done.')
 
 
-def load_train_data(model, img_rows=128, img_cols=128):
+def load_data(model, set='train', img_rows=128, img_cols=128):
     """
-        Loading training data & doing some additional preprocessing on it. If the indicated model is a dnn, we flatten out
-        the input images. If the indicated model is a cnn, we put the channels first.
-        :param model: string to indicate the type of model to prepare the data for. Either 'dnn' or 'cnn'
-        :param img_rows: the new x-axis dimension used to resize the images
-        :param img_cols: the new y-axis dimension used to resize the images
-        :return: images& target features as numpy arrays.
-        """
+    Loading training data & doing some additional preprocessing on it. If the indicated model is a dnn, we flatten out
+    the input images. If the indicated model is a cnn, we put the channels first.
+    :param model: string to indicate the type of model to prepare the data for. Either 'dnn' or 'cnn'
+    :param set: string to specify whether we load the training or testing data
+    :param img_rows: the new x-axis dimension used to resize the images
+    :param img_cols: the new y-axis dimension used to resize the images
+    :return: images& target features as numpy arrays.
+    """
     print('#' * 30)
-    print('Loading data from file.')
+    print('Loading {} data from file.'.format(set))
 
     # read in the .npy file containing the images
-    images_train = np.load('output/processed_data/images_train.npy')
+    images_train = np.load('output/processed_data/images_{}.npy'.format(set))
 
     # read in the .npy file containing the target features
-    targets_train = np.load('output/processed_data/targets_train.npy')
+    targets_train = np.load('output/processed_data/targets_{}.npy'.format(set))
 
     # scale image pixel values to [0, 1]
     images_train = images_train.astype(np.float32)
@@ -176,4 +177,5 @@ if __name__ == '__main__':
                       ('blurred_images', 'masks')]
     #concatenate_datasets(filenames_list=filenames_list)
 
-    #img_tr, targets_tr = load_train_data(model='cnn',  img_rows=128, img_cols=128)
+    img_tr, targets_tr = load_data(model='cnn', set='train', img_rows=128, img_cols=128)
+    img_te, targets_te = load_data(model='cnn', set='test', img_rows=128, img_cols=128)
