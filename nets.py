@@ -8,6 +8,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Flatten, Dropout, Conv2D, MaxPooling2D, Activation
 from keras.optimizers import SGD
 from keras.callbacks import EarlyStopping, LearningRateScheduler
+from keras.models import load_model
 from keras import backend as K
 
 import os
@@ -16,9 +17,9 @@ from data import load_data
 
 #   PARAMETERS  #
 num_classes = 4  # 4 target features to output
-epochs = 25  # number of training epochs (on full dataset)
-lr_start_cnn = 0.01  # start value for decreasing learning rate (cnn model only)
-lr_stop_cnn = 0.0005  # stop value for decreasing learning rate (cnn model only)
+epochs = 400  # number of training epochs (on full dataset)
+lr_start_cnn = 0.001  # start value for decreasing learning rate (cnn model only)
+lr_stop_cnn = 0.0001  # stop value for decreasing learning rate (cnn model only)
 lr_dnn = 0.0001
 
 # input image dimensions
@@ -64,13 +65,87 @@ def cnn_model():
     return model
 
 
-def train_cnn_model():
+def dnn_model():
+
+    model = Sequential()
+
+    model.add(Dense(100, input_dim=dnn_input_shape, activation='relu'))
+
+    model.add(Dense(100, activation='relu'))
+
+    model.add(Dense(100, activation='relu'))
+
+    model.add(Dense(100, activation='relu'))
+    model.add(Dropout(0.4))
+
+    model.add(Dense(num_classes))
+
+    sgd = SGD(lr=lr_dnn, momentum=0.99, nesterov=True)
+
+    model.compile(loss='mse', optimizer=sgd, metrics=['acc'])
+
+    return model
+
+
+def train_dnn_model(weights=True):
+
+    # get data
+    X_train, y_train = load_data(model='dnn', set='train', img_rows=img_rows, img_cols=img_cols)
+
+    # get model
+    if weights:
+        print('Loading saved model from file.')
+        model = load_model('output/models/dnn_model.h5')
+    else:
+        model = dnn_model()
+
+    # fit model on training data
+    hist = model.fit(X_train, y_train, batch_size=64, epochs=epochs, verbose=1)
+
+    # load test data
+    X_test, y_test = load_data(model='dnn', set='test', img_rows=img_rows, img_cols=img_cols)
+
+    # evaluate the model on the test data
+    score = model.evaluate(X_test, y_test, verbose=1)
+    print('Test mean squared error:', score[0])
+    print('Test accuracy:', score[1])
+
+    # Create directory to store metrics evolution to file.
+    directory = os.path.join(os.getcwd(), 'output/metrics_evolution/')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    # save metrics evolution
+    np.savetxt('output/metrics_evolution/dnn_model_loss_{}.csv'.format(img_rows), hist.history['loss'])
+    np.savetxt('output/metrics_evolution/dnn_model_acc_{}.csv'.format(img_rows), hist.history['acc'])
+    print('Saved metrics evolution during training to file.')
+
+    # Create directory to store model to file.
+    directory = os.path.join(os.getcwd(), 'output/models/')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    # save model
+
+    model.save('output/models/dnn_model.h5')
+    print('dnn model saved to .h5 file.')
+
+
+def train_cnn_model(weights=True):
+    """
+    Train the CNN model.
+    :param weights: If True, will load a saved model from file.
+    :return: trained model saved to file.
+    """
 
     # load training data
     X_train, y_train = load_data(model='cnn', set='train', img_rows=img_rows, img_cols=img_cols)
 
     # get CNN model
-    model = cnn_model()
+    if weights:
+        print(' Loading saved model from file.')
+        model = load_model('output/models/cnn_model.h5')
+    else:
+        model = cnn_model()
 
     # initialize dynamic change of learning rate : We start at the value of 'lr_start_cnn' and decrease it every epoch
     # to get to the final value of 'lr_stop_cnn'
@@ -80,7 +155,7 @@ def train_cnn_model():
     early_stop = EarlyStopping(monitor='loss', patience=10)
 
     # fit model on training data
-    hist = model.fit(X_train, y_train, epochs=epochs, callbacks=[change_lr, early_stop], verbose=1)
+    hist = model.fit(X_train, y_train, batch_size=64, epochs=epochs, callbacks=[change_lr, early_stop], verbose=1)
 
     # load test data
     X_test, y_test = load_data(model='cnn', set='test', img_rows=img_rows, img_cols=img_cols)
@@ -106,10 +181,10 @@ def train_cnn_model():
         os.makedirs(directory)
 
     # save model
-    model.save('output/models/cnn_model_{}.h5'.format(img_rows))
+    model.save('output/models/cnn_model.h5')
     print('CNN model saved to .h5 file.')
 
 
 if __name__ == '__main__':
-    #cnn_model = cnn_model()
-    train_cnn_model()
+    #train_cnn_model(weights=True)
+    train_dnn_model(weights=True)
