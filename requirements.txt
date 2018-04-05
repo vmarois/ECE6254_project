@@ -1,0 +1,12 @@
+SimpleITK
+numpy
+matplotlib
+seaborn
+scipy
+Pillow
+pandas
+scikit-image
+scikit-learn
+keras
+tensorflow
+h5py
