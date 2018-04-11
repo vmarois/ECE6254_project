@@ -73,6 +73,8 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128,
         sigma = 0.6
         blurred_images = np.ndarray((2 * len(patients), img_rows, img_cols), dtype=np.uint8)
 
+    print('\n')
+
     # we now go through each patient's directory :
     idx = 0
     for patient in patients:
