@@ -62,6 +62,7 @@ def cnn_model():
     sgd = SGD(lr=lr_start_cnn, momentum=0.9, nesterov=True)
     model.compile(loss='mse', optimizer=sgd, metrics=['acc'])
 
+    print('Created CNN model.')
     return model
 
 
@@ -84,22 +85,32 @@ def dnn_model():
 
     model.compile(loss='mse', optimizer=sgd, metrics=['acc'])
 
+    print('Created DNN model.')
+
     return model
 
 
 def train_dnn_model(weights=True):
+    """
+    Train the DNN model.
+    :param weights: If True, will load a saved model from file.
+    :return: trained model saved to file.
+    """
 
+    print('#' * 30)
+    print('DNN Model training routine: ')
     # get data
     X_train, y_train = load_data(model='dnn', set='train', img_rows=img_rows, img_cols=img_cols)
 
     # get model
     if weights:
-        print('Loading saved model from file.')
+        print(' Loading saved model from file.')
         model = load_model('output/models/dnn_model.h5')
     else:
         model = dnn_model()
 
     # fit model on training data
+    print('Fitting model on training data:')
     hist = model.fit(X_train, y_train, batch_size=64, epochs=epochs, verbose=1)
 
     # load test data
@@ -137,6 +148,8 @@ def train_cnn_model(weights=True):
     :return: trained model saved to file.
     """
 
+    print('#' * 30)
+    print('CNN Model training routine: ')
     # load training data
     X_train, y_train = load_data(model='cnn', set='train', img_rows=img_rows, img_cols=img_cols)
 
@@ -155,6 +168,7 @@ def train_cnn_model(weights=True):
     early_stop = EarlyStopping(monitor='loss', patience=10)
 
     # fit model on training data
+    print('Fitting model on training data:')
     hist = model.fit(X_train, y_train, batch_size=64, epochs=epochs, callbacks=[change_lr, early_stop], verbose=1)
 
     # load test data
@@ -186,5 +200,7 @@ def train_cnn_model(weights=True):
 
 
 if __name__ == '__main__':
-    #train_cnn_model(weights=True)
-    train_dnn_model(weights=True)
+
+    train_cnn_model(weights=False)
+
+    train_dnn_model(weights=False)

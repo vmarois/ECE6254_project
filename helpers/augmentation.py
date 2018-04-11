@@ -24,15 +24,16 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128,
     :param rotation: flag to apply or not rotation on the dataset. If yes:
         - Use the same rotation angle for images of a same patient. Randomly select a rotation angle in [-10°, +10°]
     :param shift: flag to apply or not shifting on the dataset. If yes:
-        - Use the same shift offset for images of a same patient. Randomly select an offset in [-10, +10]
+        - Use the same shift offset for images of a same patient. Randomly select an offset in [-30, +30]
     :param flip: flag to apply or not flipping (vertically) on the dataset.
     :param contrast: flag to apply or not contrast stretching on the dataset. If yes:
         - Increase contrast of the images using the contrast stretching method with the 4th & 96th percentiles as cutoff
     points. See http://homepages.inf.ed.ac.uk/rbf/HIPR2/stretch.htm for more detail. No need to apply this modification
     on the segmentation masks.
     :param blur: flag to apply or not gaussian blur on the dataset. If yes:
-        - Apply a blur with sigma = 0.6.
-    Resizes the images & masks to (img_rows, img_cols).
+        - Apply a blur with sigma = 0.6. No need to apply this modification on the segmentation masks.
+
+    Resize the images & masks to (img_rows, img_cols).
     The images & their variants are stored into different .npy files.
     """
     # get the patients ids located in the data/ directory
@@ -52,7 +53,7 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128,
         rotated_masks = np.ndarray((2 * len(patients), img_rows, img_cols), dtype=np.uint8)
 
     if shift:
-        print(' Shifting by a random offset within [-10, +10]')
+        print(' Shifting by a random offset within [-30, +30]')
         # range of offsets
         offsets = np.arange(-30, 31, 1)
         shifted_images = np.ndarray((2 * len(patients), img_rows, img_cols), dtype=np.uint8)
@@ -84,7 +85,7 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128,
             # randomly select a offset from the specified range for each patient
             shift_offset = np.random.choice(offsets)
 
-        for phase in ['ED', 'ES']:
+        for phase in ['ED', 'ES']:  # 2 images per patient
 
             # read image & mask
             img, _, _, _ = load_mhd_data('data/{pa}/{pa}_4CH_{ph}.mhd'.format(pa=patient, ph=phase))
@@ -157,28 +158,39 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128,
         os.makedirs(directory)
 
     # save all ndarrays to a .npy files (for faster loading later)
+    print('Saving augmented data to file:')
     np.save('output/augmented_data/images.npy', images)
     np.save('output/augmented_data/masks.npy', masks)
+    print('output/augmented_data/images.npy')
+    print('output/augmented_data/masks.npy')
 
     if rotation:
         np.save('output/augmented_data/rotated_images.npy', rotated_images)
         np.save('output/augmented_data/rotated_masks.npy', rotated_masks)
+        print('output/augmented_data/rotated_images.npy')
+        print('output/augmented_data/rotated_masks.npy')
 
     if shift:
         np.save('output/augmented_data/shifted_images.npy', shifted_images)
         np.save('output/augmented_data/shifted_masks.npy', shifted_masks)
+        print('output/augmented_data/shifted_images.npy')
+        print('output/augmented_data/shifted_masks.npy')
 
     if flip:
         np.save('output/augmented_data/flipped_images.npy', flipped_images)
         np.save('output/augmented_data/flipped_masks.npy', flipped_masks)
+        print('output/augmented_data/flipped_images.npy')
+        print('output/augmented_data/flipped_masks.npy')
 
     if contrast:
         np.save('output/augmented_data/contrast_images.npy', contrast_images)
+        print('output/augmented_data/constrast_images.npy')
 
     if blur:
         np.save('output/augmented_data/blurred_images.npy', blurred_images)
+        print('output/augmented_data/blurred_images.npy')
 
-    print('Data augmentation by rotation done.')
+    print('Data augmentation pipeline done.')
 
 
 def rotate_dataset(images, masks):

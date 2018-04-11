@@ -18,6 +18,7 @@ def create_dataset(img_rows=128, img_cols=128):
     Also writes these 2 np.ndarrays to .npy files for faster loading when reusing them.
     :return: images np.ndarrays, masks np.ndarray
     """
+    print('Creating original dataset from the raw data')
     # first, get the patients directory names located in the data/ directory. These names (e.g. 'patient0001') will
     # be used for indexing (also avoid hidden files & folders)
     patients = [name for name in os.listdir(os.path.join(os.curdir, 'data/')) if not name.startswith('.')]
@@ -61,18 +62,24 @@ def create_dataset(img_rows=128, img_cols=128):
     # save all ndarrays to a .npy files (for faster loading later)
     np.save('output/processed_data/images.npy', images)
     np.save('output/processed_data/masks.npy', masks)
-    print('Saving to .npy files done.')
+    print('Saving to .npy files done: see files\noutput/processed_data/images.npy & \noutput/processed_data/masks.npy.')
 
 
-def concatenate_datasets(filenames_list):
+def concatenate_datasets(filenames_list, img_rows=128, img_cols=128):
     """
     Concatenate the datasets (.npy files) contained in output/augmented_data into 1.
     We also use the segmentation masks to compute the center & main orientation of the left ventricle
+
     :param filenames_list: list of tuples specifying the pairs of images & masks:
         [(images, masks), (rotated_images, rotated_masks)..]
+    :param img_rows, img_cols: images dimensions
     :return: whole set of images + ground truth values for center, orientation saved to .npy files
     """
     print('Concatenating the datasets created by data augmentation into a single one')
+    print('Using the following pairs of images / masks datasets: ')
+    print(filenames_list)
+    print('\n')
+
     # total number of images
     n_samples = 600 * len(filenames_list)
 
@@ -99,7 +106,7 @@ def concatenate_datasets(filenames_list):
             # save image in main dataset file
             images_dataset[ds*600 + idx] = images[idx]
 
-    print('Concatenated all datasets into one & created target values')
+    print('Concatenated all datasets into one & created target values for (center, orientation)')
 
     print('Splitting the dataset into 70% training & 30% testing')
     images_train, images_test, targets_train, targets_test = train_test_split(images_dataset, targets_dataset,
@@ -120,7 +127,11 @@ def concatenate_datasets(filenames_list):
     # save testing set to file
     np.save('output/processed_data/images_test.npy', images_test)
     np.save('output/processed_data/targets_test.npy', targets_test)
-    print('Saving to .npy files done.')
+    print('Saving to .npy files done. See files: ')
+    print('output/processed_data/images_train.npy')
+    print('output/processed_data/targets_train.npy')
+    print('output/processed_data/images_test.npy')
+    print('output/processed_data/targets_test.npy')
 
 
 def load_data(model, set='train', img_rows=128, img_cols=128):
@@ -131,7 +142,7 @@ def load_data(model, set='train', img_rows=128, img_cols=128):
     :param set: string to specify whether we load the training or testing data
     :param img_rows: the new x-axis dimension used to resize the images
     :param img_cols: the new y-axis dimension used to resize the images
-    :return: images& target features as numpy arrays.
+    :return: images & target features as numpy arrays.
     """
     print('#' * 30)
     print('Loading {} data from file.'.format(set))
@@ -159,8 +170,7 @@ def load_data(model, set='train', img_rows=128, img_cols=128):
         print('Indicated model is a DNN, flattening out images.')
         images_train = images_train.reshape(images_train.shape[0], img_rows * img_rows)
 
-    print('Loading & processing done. Pixel image values have been scaled to [0, 1],'
-          'and target center coordinates to [-1, 1].')
+    print('Loading done. Pixel values have been scaled to [0, 1] and target center coordinates to [-1, 1].')
     print('#' * 30)
 
     return images_train, targets_train
@@ -168,14 +178,14 @@ def load_data(model, set='train', img_rows=128, img_cols=128):
 
 if __name__ == '__main__':
     #create_dataset(img_rows=128, img_cols=128)
-    #data_augmentation_pipeline(img_rows=128, img_cols=128,rotation=True,shift=True,flip=True,contrast=True,blur=True)
+
+    data_augmentation_pipeline(img_rows=128, img_cols=128,rotation=True,shift=True,flip=True,contrast=True,blur=True)
+
     filenames_list = [('images', 'masks'),
                       ('rotated_images', 'rotated_masks'),
                       ('shifted_images', 'shifted_masks'),
                       ('flipped_images', 'flipped_masks'),
                       ('contrast_images', 'masks'),
                       ('blurred_images', 'masks')]
-    #concatenate_datasets(filenames_list=filenames_list)
 
-    img_tr, targets_tr = load_data(model='cnn', set='train', img_rows=128, img_cols=128)
-    img_te, targets_te = load_data(model='cnn', set='test', img_rows=128, img_cols=128)
+    concatenate_datasets(filenames_list=filenames_list)
