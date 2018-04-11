@@ -171,7 +171,8 @@ def train_cnn_model(weights=True):
 
     # fit model on training data
     print('Fitting model on training data:')
-    hist = model.fit(X_train, y_train, batch_size=64, epochs=epochs, callbacks=[change_lr, early_stop], verbose=1)
+    hist = model.fit(X_train, y_train, batch_size=64, epochs=epochs, callbacks=[change_lr, early_stop],
+                     validation_split=0.33, shuffle=True, verbose=1)
 
     # load test data
     X_test, y_test = load_data(model='cnn', set='test', img_rows=img_rows, img_cols=img_cols)
@@ -187,8 +188,10 @@ def train_cnn_model(weights=True):
         os.makedirs(directory)
 
     # save metrics evolution
-    np.savetxt('output/metrics_evolution/cnn_model_loss_{}.csv'.format(img_rows), hist.history['loss'])
-    np.savetxt('output/metrics_evolution/cnn_model_acc_{}.csv'.format(img_rows), hist.history['acc'])
+    np.savetxt('output/metrics_evolution/cnn_model_loss.csv', hist.history['loss'])
+    np.savetxt('output/metrics_evolution/cnn_model_acc.csv', hist.history['acc'])
+    np.savetxt('output/metrics_evolution/cnn_model_val_acc.csv', hist.history['val_acc'])
+    np.savetxt('output/metrics_evolution/cnn_model_val_loss.csv', hist.history['val_loss'])
     print('Saved metrics evolution during training to file.')
 
     # Create directory to store model to file.
@@ -203,6 +206,6 @@ def train_cnn_model(weights=True):
 
 if __name__ == '__main__':
 
-    #train_cnn_model(weights=False)
+    train_cnn_model(weights=False)
 
-    train_dnn_model(weights=False)
+    #train_dnn_model(weights=False)
