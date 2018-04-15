@@ -283,6 +283,4 @@ if __name__ == '__main__':
                       ('contrast_images', 'masks'),
                       ('blurred_images', 'masks')]
 
-    #concatenate_datasets(filenames_list=filenames_list)
-
-    concatenate_datasets_seg(filenames_list, img_rows=128, img_cols=128)
+    concatenate_datasets(filenames_list=filenames_list)

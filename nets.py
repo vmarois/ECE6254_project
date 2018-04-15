@@ -30,6 +30,7 @@ cnn_input_shape = (1, img_rows, img_cols)
 
 K.set_image_data_format('channels_first')  # Sets the value of the data format convention.
 
+
 def cnn_model():
     """
     Convolutional Neural Network Model.
@@ -94,13 +95,11 @@ def cnn_seg_model():
     model.add(Conv2D(64, kernel_size=(2, 2)))  # should output (64, 63, 63) as 64-2+1 = 63
 
     model.add(UpSampling2D(size=(2, 2)))  # should output (64, 126, 126)
-    #model.add(ZeroPadding2D(padding=(2, 2)))  # should output (64, 128, 128)
     model.add(Conv2D(32, kernel_size=(2, 2)))  # should output (32, 127, 127)
     model.add(ZeroPadding2D(padding=(2, 2)))  # should output (32, 129, 129)
     model.add(Conv2D(4, kernel_size=(2, 2)))  # should output (4, 128, 128)
-    #model.add(Activation('softmax'))
 
-    model.add(Lambda(lambda x: K.max(x, axis=1, keepdims=True), output_shape=(1,128, 128)))
+    model.add(Lambda(lambda x: K.max(x, axis=2, keepdims=True), output_shape=(1,128, 128)))
 
     sgd = SGD(lr=lr_start_cnn, momentum=0.9, nesterov=True)
     model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['acc'])
@@ -309,6 +308,6 @@ def train_cnn_seg_model(weights=False):
 
 if __name__ == '__main__':
     
-    train_cnn_seg_model(weights=False)
+    train_cnn_model(weights=False)
 
     #train_dnn_model(weights=False)
