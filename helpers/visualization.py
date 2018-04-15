@@ -13,23 +13,37 @@ img_rows, img_cols = 128, 128
 scale = 35
 
 
-def plot_train_test_metric(train, test):
+def plot_train_test_metric(train, test, title, metricname):
     """
-    Create a plot showing the evolution of the same metric evaluated during epochs on train set & test set
+    Create a plot showing the evolution of the same metric evaluated during epochs on train set & holdout set.
+
     :param train: .csv filepath containing metric values evaluated on training data
     :param test: .csv filepath containing metric values evaluated on holdout data
-    :return:
+    :param title: string for the plot title & output filename.
+    :param metricname: plot ylabel.
+    :return: None, plot saved to file.
     """
     metric = np.loadtxt(train)
     val_metric = np.loadtxt(test)
 
+    plt.style.use('ggplot')
+    plt.grid(b=True)
     plt.plot(metric)
     plt.plot(val_metric)
-    plt.title('model accuracy')
-    plt.ylabel('accuracy')
+    plt.title(title)
+    plt.ylabel(metricname)
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='best')
-    plt.show()
+
+    # Create directory to store pdf files.
+    directory = os.path.join(os.getcwd(), 'output/plots/')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    plt.savefig('output/plots/{}.png'.format(title), bbox_layout='tight', dpi=300)
+    plt.clf()
+
+    print('{} plot saved to file.'.format(title))
 
 
 def plot_sample(model, datapath='data/', phase='ED'):
