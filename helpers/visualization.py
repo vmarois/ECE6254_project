@@ -5,6 +5,7 @@
 @date: 11/04/2018
 """
 import os
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 from keras.models import load_model
@@ -99,6 +100,23 @@ def plot_sample(model, phase='ED'):
     print('\nTrue xOrientation, yOrientation = ', true_x_v1, true_y_v1)
     print('Predicted xOrientation, yOrientation = ', x_v1, y_v1)
 
+    # compute distance between predicted & true center
+    distance = np.sqrt((pred_row-true_row) ** 2 + (pred_col-true_col) ** 2)
+
+    # compute angle difference between predicted orientation
+    # compute vector corresponding to predicted orientation
+    predVector = np.array((x_v1,y_v1))
+    predMagnitude = np.linalg.norm(x=predVector, ord=2)
+
+    # compute vector corresponding to ground truth orientation
+    trueVector = np.array((true_x_v1,true_y_v1))
+    trueMagnitude = np.linalg.norm(x=trueVector, ord=2)
+
+    angle = np.dot(trueVector, predVector) / (trueMagnitude * predMagnitude)
+    angle = angle % 1
+    angle = math.acos(angle)
+    angle = math.degrees(angle) % 360
+
     # plot resized image
     plt.imshow(img, cmap='Greys_r')
 
@@ -122,6 +140,14 @@ def plot_sample(model, phase='ED'):
     # plot true center
     true_center = plt.Circle((true_col, true_row), 1, color='black', label='Reference')
     ax.add_artist(true_center)
+
+    plt.text(0, 0, "dist: %.3f\nangle: %.3f"%(distance, angle),
+             ha="left", va="top",
+             bbox=dict(boxstyle="square",
+                       ec=(1., 0.5, 0.5),
+                       fc=(1., 0.8, 0.8),
+                       )
+             )
 
     plt.axis('equal')
     plt.legend()
