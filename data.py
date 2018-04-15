@@ -263,6 +263,7 @@ def load_data_seg(set='train', img_rows=128, img_cols=128):
     # reshape images according to the neural network model intended to be used
     print('Reshaping images with channels first.')
     images_train = images_train.reshape(-1, 1, img_rows, img_cols)
+    targets_train = targets_train.reshape(-1, 1, img_rows, img_cols)
 
     print('Loading done. Pixel values have been scaled to [0, 1] and target center coordinates to [-1, 1].')
     print('#' * 30)
