@@ -132,7 +132,7 @@ def plot_sample(model, phase='ED'):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    plt.savefig("output/plots/sample_image_{m}_{i}_{p}.pdf".format(m=model.upper(), i=sample, p=phase), bbox_inches='tight', dpi=300)
+    plt.savefig("output/plots/sample_image_{m}_{i}_{p}.png".format(m=model.upper(), i=sample, p=phase), bbox_inches='tight', dpi=300)
     print('Sample image plot saved to file.')
     plt.show()
     plt.clf()
