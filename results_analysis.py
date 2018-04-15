@@ -7,7 +7,7 @@
 from helpers import *
 
 if __name__ == '__main__':
-
+    """
     # plot loss evolution of DNN model
     plot_train_test_metric('output/metrics_evolution/dnn_model_loss.csv', 'output/metrics_evolution/dnn_model_val_loss.csv', 'DNN Loss Evolution', 'Loss')
 
@@ -22,5 +22,5 @@ if __name__ == '__main__':
     # plot accuracy evolution of CNN model
     plot_train_test_metric('output/metrics_evolution/cnn_model_acc.csv',
                            'output/metrics_evolution/cnn_model_val_acc.csv', 'CNN Accuracy Evolution', 'Accuracy')
-
-    #plot_sample(model='dnn', datapath='data/', phase='ES')
+    """
+    plot_sample(model='cnn', phase='ES')

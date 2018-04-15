@@ -46,15 +46,17 @@ def plot_train_test_metric(train, test, title, metricname):
     print('{} plot saved to file.'.format(title))
 
 
-def plot_sample(model, datapath='data/', phase='ED'):
+def plot_sample(model, phase='ED'):
     """
-    Plot the predicted center & main orientation on a sample image.
+    Plot the predicted center & main orientation on a sample image randomly drawn from the test set.
+    Also plot ground truth center & main orientation for reference
+
     :param model: the model to use, either 'cnn' or 'dnn'
-    :param sample: the sample image filename
-    :param datapath: the datapath where sample is located
     :param phase: indicates which phase to select, either 'ED' or 'ES'
-    :return: a matplotlib.pyplot showing predicted center & main orientation on sample image.
+
+    :return: matplotlib.pyplot saved to file.
     """
+
     # load saved model
     saved_model = load_model('output/models/{}_model.h5'.format(model))
 
@@ -63,10 +65,13 @@ def plot_sample(model, datapath='data/', phase='ED'):
     targets = np.load('output/processed_data/targets_test.npy')
 
     sample = np.random.randint(len(imgs))
+    print('Sample', sample)
     img = imgs[sample]
     target = targets[sample]
 
+    # get ground truth values
     true_row, true_col = target[0], target[1]
+    true_x_v1, true_y_v1 = target[2], target[3]
 
     # scale image pixel values to [0, 1]
     img = img.astype(np.float32)
@@ -91,36 +96,43 @@ def plot_sample(model, datapath='data/', phase='ED'):
     print('True rowCenter, colCenter = ', true_row, true_col)
     print('Predicted rowCenter, colCenter = ', int(pred_row), int(pred_col))
 
-    print('\nTrue xOrientation, yOrientation = ', target[2], target[3])
+    print('\nTrue xOrientation, yOrientation = ', true_x_v1, true_y_v1)
     print('Predicted xOrientation, yOrientation = ', x_v1, y_v1)
 
     # plot resized image
     plt.imshow(img, cmap='Greys_r')
-    # plot orientation line passing through predicted center
+
+    # plot predicted orientation line passing through predicted center
     plt.plot([pred_col - x_v1 * scale, pred_col + x_v1 * scale],
              [pred_row - y_v1 * scale, pred_row + y_v1 * scale],
-             color='white')
+             color='red', label='Prediction')
+
+    # plot predicted orientation line passing through predicted center
+    plt.plot([true_col - true_x_v1 * scale, true_col + true_x_v1 * scale],
+             [true_row - true_y_v1 * scale, true_row + true_y_v1 * scale],
+             color='black', label='Reference')
 
     fig = plt.gcf()
     ax = fig.gca()
 
     # plot predicted center
-    pred_center = plt.Circle((pred_col, pred_row), 1, color='red')
+    pred_center = plt.Circle((pred_col, pred_row), 1, color='red', label='Prediction')
     ax.add_artist(pred_center)
-    ax.add_artist(pred_center)
+
     # plot true center
-    true_center = plt.Circle((true_col, true_row), 1, color='black')
+    true_center = plt.Circle((true_col, true_row), 1, color='black', label='Reference')
     ax.add_artist(true_center)
 
     plt.axis('equal')
-    plt.title('True & predicted center +  predicted orientation.'
-              ' Model = {} , Phase = {}'.format(model.upper(), phase))
+    plt.legend()
+    plt.title('Predicted center & orientation vs GT.\n Model = {} , Phase = {}'.format(model.upper(), phase))
 
     # Create directory to store pdf files.
     directory = os.path.join(os.getcwd(), 'output/plots/')
     if not os.path.exists(directory):
         os.makedirs(directory)
-    plt.savefig("output/plots/sample_image_{m}_{i}_{p}.pdf".format(m=model.upper(), i=img_rows, p=phase), bbox_inches='tight')
+
+    plt.savefig("output/plots/sample_image_{m}_{i}_{p}.pdf".format(m=model.upper(), i=sample, p=phase), bbox_inches='tight', dpi=300)
     print('Sample image plot saved to file.')
     plt.show()
     plt.clf()
