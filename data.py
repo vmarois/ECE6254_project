@@ -239,6 +239,37 @@ def load_data(model, set='train', img_rows=128, img_cols=128):
     return images_train, targets_train
 
 
+def load_data_seg(set='train', img_rows=128, img_cols=128):
+    """
+    Loading training data for the Segmentation CNN & doing some additional preprocessing on it. Putting the channels first.
+    :param set: string to specify whether we load the training or testing data
+    :param img_rows: the new x-axis dimension used to resize the images
+    :param img_cols: the new y-axis dimension used to resize the images
+    :return: images & target features as numpy arrays.
+    """
+    print('#' * 30)
+    print('Loading {} data from file.'.format(set))
+
+    # read in the .npy file containing the images
+    images_train = np.load('output/processed_data/seg_images_{}.npy'.format(set))
+
+    # read in the .npy file containing the target features
+    targets_train = np.load('output/processed_data/seg_targets_{}.npy'.format(set))
+
+    # scale image pixel values to [0, 1]
+    images_train = images_train.astype(np.float32)
+    images_train /= 255.
+
+    # reshape images according to the neural network model intended to be used
+    print('Reshaping images with channels first.')
+    images_train = images_train.reshape(-1, 1, img_rows, img_cols)
+
+    print('Loading done. Pixel values have been scaled to [0, 1] and target center coordinates to [-1, 1].')
+    print('#' * 30)
+
+    return images_train, targets_train
+
+
 if __name__ == '__main__':
     #create_dataset(img_rows=128, img_cols=128)
 
