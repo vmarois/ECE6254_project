@@ -5,7 +5,7 @@
 @date: 03/04/2018
 """
 from keras.models import Sequential
-from keras.layers import Dense, Flatten, Dropout, Conv2D, MaxPooling2D, Activation
+from keras.layers import Dense, Flatten, Dropout, Conv2D, MaxPooling2D, Activation, UpSampling2D, ZeroPadding2D
 from keras.optimizers import SGD
 from keras.callbacks import EarlyStopping, LearningRateScheduler
 from keras.models import load_model
@@ -63,6 +63,47 @@ def cnn_model():
     model.compile(loss='mse', optimizer=sgd, metrics=['acc'])
 
     print('Created CNN model.')
+    return model
+
+
+def cnn_seg_model():
+    """
+    Convolutional Neural Network Model: same encoder as cnn_model(), but adds a decoder to predict segmentation mask.
+    :return: compiled model.
+    """
+    model = Sequential()
+
+    model.add(Conv2D(32, kernel_size=(3, 3), input_shape=cnn_input_shape))  # should output (32, 126, 126) as 128-3+1 = 126
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))  # # should output (32, 63, 63)
+
+    model.add(Conv2D(64, (2, 2)))  # should output (64, 62, 62) as 63-2+1 = 62
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))  # should output (64, 31, 31)
+
+    model.add(Conv2D(128, (2, 2)))  # should output (128, 30, 30) as 31-2+1 = 30
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))  # should output (128, 15, 15)
+
+    # decoder
+    model.add(UpSampling2D(size=(2, 2)))  # should output (128, 30, 30)
+    model.add(ZeroPadding2D(padding=(1, 1)))   # should output (128, 32, 32)
+    model.add(Conv2D(128, kernel_size=(2, 2)))  # should output (128, 31, 3) as 32-2+1 = 31
+
+    model.add(UpSampling2D(size=(2, 2)))  # should output (128, 62, 62)
+    model.add(ZeroPadding2D(padding=(1, 1)))  # should output (128, 64, 64)
+    model.add(Conv2D(64, kernel_size=(2, 2)))  # should output (64, 63, 63) as 64-2+1 = 63
+
+    model.add(UpSampling2D(size=(2, 2)))  # should output (64, 126, 126)
+    model.add(ZeroPadding2D(padding=(2, 2)))  # should output (64, 128, 128)
+    model.add(Conv2D(32, kernel_size=(2, 2)))  # should output (32, 127, 127)
+    model.add(ZeroPadding2D(padding=(2, 2)))  # should output (32, 129, 129)
+    model.add(Conv2D(4, kernel_size=(2, 2)))  # should output (4, 128, 128)
+
+    sgd = SGD(lr=lr_start_cnn, momentum=0.9, nesterov=True)
+    model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['acc'])
+
+    print('Created CNN Segmentation model.')
     return model
 
 
