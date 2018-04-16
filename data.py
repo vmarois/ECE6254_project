@@ -284,3 +284,5 @@ if __name__ == '__main__':
                       ('blurred_images', 'masks')]
 
     concatenate_datasets(filenames_list=filenames_list)
+
+    plot_data_augmentation()

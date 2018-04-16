@@ -162,3 +162,31 @@ def plot_sample(model, phase='ED'):
     print('Sample image plot saved to file.')
     plt.show()
     plt.clf()
+
+
+def plot_data_augmentation():
+    """
+    Plot the original image and the 5 artificially created images side-by-side for visualization.
+
+    :return: plot saved to file.
+    """
+    filenames_list = ['images', 'rotated_images', 'shifted_images', 'flipped_images', 'contrast_images', 'blurred_images']
+
+    plt.figure(figsize=(8, 6))
+
+    sample = np.random.randint(600)
+
+    for idx, file in enumerate(filenames_list):
+        # load file
+        print('Loading', file)
+        images = np.load('output/augmented_data/{}.npy'.format(file))
+
+        plt.subplot(2, 3, idx + 1)
+        plt.imshow(images[sample], cmap='Greys_r')
+        plt.axis('off')
+        plt.title(file)
+
+    plt.suptitle('Data Augmentation Example')
+    plt.savefig('output/plots/data_augmentation_vis_{}.png'.format(sample), bbox_layout='tight', dpi=300)
+    plt.show()
+    plt.clf()
