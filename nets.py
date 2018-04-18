@@ -289,7 +289,106 @@ def train_cnn_model(weights=True):
     print('CNN model saved to .h5 file.')
 
 
+def train_cnn_model_kfold():
+    """
+    Train the DNN model doing 5-fold cross-validation. Don't save the model to file.
+    """
+
+    print('#' * 30)
+    print('CNN Model 5fold training routine: ')
+    # get training data
+    X_train, y_train = load_data(model='cnn', set='train', img_rows=img_rows, img_cols=img_cols)
+
+    # load test data
+    X_test, y_test = load_data(model='cnn', set='test', img_rows=img_rows, img_cols=img_cols)
+
+    # create masks for k fold cross validation
+    mask1 = np.zeros((len(X_train)), dtype=bool)
+    mask1[:500] = True
+    mask2 = np.zeros((len(X_train)), dtype=bool)
+    mask2[500:1000] = True
+    mask3 = np.zeros((len(X_train)), dtype=bool)
+    mask3[1000:1500] = True
+    mask4 = np.zeros((len(X_train)), dtype=bool)
+    mask4[1500:2000] = True
+    mask5 = np.zeros((len(X_train)), dtype=bool)
+    mask5[2000:] = True
+
+    splits = [(True ^ mask1, mask1), (True ^ mask2, mask2), (True ^ mask3, mask3), (True ^ mask4, mask4),
+              (True ^ mask5, mask5)]
+
+    accs = []
+    losses = []
+    val_accs = []
+    val_losses = []
+
+    for idx, (train, test) in enumerate(splits):
+        print('\nFold n° ', idx + 1)
+
+        # initialize dynamic change of learning rate : We start at the value of 'lr_start_cnn' and decrease it every
+        # epoch to get to the final value of 'lr_stop_cnn'
+        # initialize early stop : stop training if the monitored metric does not change for 'patience' epochs
+        learning_rate = np.linspace(lr_start_cnn, lr_stop_cnn, epochs)
+        change_lr = LearningRateScheduler(lambda epoch: float(learning_rate[epoch]))
+        early_stop = EarlyStopping(monitor='loss', patience=10)
+
+        # create model
+        model = cnn_model()
+
+        # fit model on training data
+        print('Fitting model on training data:')
+        history = model.fit(X_train[train], y_train[train], batch_size=64, epochs=epochs,
+                            callbacks=[change_lr, early_stop], validation_data=(X_train[test], y_train[test]),
+                            shuffle=True, verbose=1)
+
+        # evaluate the model on the (true) test data
+        score = model.evaluate(X_test, y_test, verbose=1)
+        print('Test mean squared error:', score[0])
+        print('Test accuracy:', score[1])
+
+        # save metrics evolution to file
+        accs.append(history.history['acc'])
+        losses.append(history.history['loss'])
+        val_accs.append(history.history['val_acc'])
+        val_losses.append(history.history['val_loss'])
+
+    print('\n5-fold cross validation done.')
+    # compute average & std on the 5 folds
+    mean_acc = np.mean(np.array(accs), axis=0)
+    std_acc = np.std(np.array(accs), axis=0)
+
+    mean_loss = np.mean(np.array(losses), axis=0)
+    std_loss = np.std(np.array(losses), axis=0)
+
+    mean_val_acc = np.mean(np.array(val_accs), axis=0)
+    std_val_acc = np.std(np.array(val_accs), axis=0)
+
+    mean_val_losses = np.mean(np.array(val_losses), axis=0)
+    std_val_losses = np.std(np.array(val_losses), axis=0)
+
+    # Create directory to store metrics evolution to file.
+    directory = os.path.join(os.getcwd(), 'output/metrics_evolution/')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    # save mean metrics evolution to file
+    np.savetxt('output/metrics_evolution/cnn_mean_loss.csv', mean_loss)
+    np.savetxt('output/metrics_evolution/cnn_mean_acc.csv', mean_acc)
+    np.savetxt('output/metrics_evolution/cnn_mean_val_acc.csv', mean_val_acc)
+    np.savetxt('output/metrics_evolution/cnn_mean_val_loss.csv', mean_val_losses)
+
+    # save std metrics evolution
+    np.savetxt('output/metrics_evolution/cnn_std_loss.csv', std_loss)
+    np.savetxt('output/metrics_evolution/cnn_std_acc.csv', std_acc)
+    np.savetxt('output/metrics_evolution/cnn_std_val_acc.csv', std_val_acc)
+    np.savetxt('output/metrics_evolution/cnn_std_val_loss.csv', std_val_losses)
+
+    print('Saved metrics evolution during training to file.')
+
+
 if __name__ == '__main__':
     #train_cnn_model(weights=False)
 
-    train_dnn_model_kfold()
+    #train_dnn_model_kfold()
+
+    train_cnn_model_kfold()
