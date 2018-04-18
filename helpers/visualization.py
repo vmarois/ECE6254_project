@@ -47,7 +47,7 @@ def plot_train_test_metric(train, test, title, metricname):
     print('{} plot saved to file.'.format(title))
 
 
-def plot_train_test_metric_kfold(model, metric, title, metricname):
+def plot_train_test_metric_kfold(model, metric, title, metricname, nb_epochs):
     """
     Create a plot showing the evolution of the same metric evaluated during epochs on train set & holdout set for
     k-fold cross validation.
@@ -56,6 +56,8 @@ def plot_train_test_metric_kfold(model, metric, title, metricname):
     :param metric: which metric to plot: either 'acc' or 'loss'
     :param title: string for the plot title & output filename.
     :param metricname: string for ylabel
+    :param nb_epochs: number of epochs the model has been trained on
+
     :return: None, plot saved to file.
     """
     # load specified metric from specified model from file
@@ -69,10 +71,10 @@ def plot_train_test_metric_kfold(model, metric, title, metricname):
     plt.grid(b=True)
 
     plt.plot(mean_metric, color='crimson', label='train')
-    plt.fill_between(range(1, 401), mean_metric - std_metric, mean_metric + std_metric, alpha=0.1, color="crimson")
+    plt.fill_between(range(1, nb_epochs+1), mean_metric - std_metric, mean_metric + std_metric, alpha=0.1, color="crimson")
 
     plt.plot(mean_val_metric, color='mediumseagreen', label='test')
-    plt.fill_between(range(1, 401), mean_val_metric - std_val_metric, mean_val_metric + std_val_metric, alpha=0.1, color="mediumseagreen")
+    plt.fill_between(range(1, nb_epochs+1), mean_val_metric - std_val_metric, mean_val_metric + std_val_metric, alpha=0.1, color="mediumseagreen")
     plt.title(title)
     plt.ylabel(metricname)
     plt.xlabel('epoch')

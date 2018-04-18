@@ -152,12 +152,13 @@ if __name__ == '__main__':
     plot_train_test_metric('output/metrics_evolution/cnn_model_acc.csv',
                            'output/metrics_evolution/cnn_model_val_acc.csv', 'CNN Accuracy Evolution', 'Accuracy')
 
-    plot_sample(model='cnn', phase='ES')
-
+    plot_sample(model='dnn')
+    
     boxPlotDistance()
 
     boxPlotAngle()
     """
-    #plot_train_test_metric_kfold(model='dnn', metric='acc', title='DNN 5-fold CV Accuracy Evolution', metricname='Accuracy')
-    plot_train_test_metric_kfold(model='cnn', metric='acc', title='CNN 5-fold CV Accuracy Evolution',
-                                 metricname='Accuracy')
+    plot_train_test_metric_kfold(model='cnn', metric='acc', title='DNN 5-fold CV Accuracy Evolution (With Dropout)',
+                                 metricname='Accuracy', nb_epochs=400)
+    plot_train_test_metric_kfold(model='cnn', metric='loss', title='DNN 5-fold CV Loss Evolution (With Dropout)',
+                                 metricname='Loss', nb_epochs=400)
