@@ -47,13 +47,54 @@ def plot_train_test_metric(train, test, title, metricname):
     print('{} plot saved to file.'.format(title))
 
 
-def plot_sample(model, phase='ED'):
+def plot_train_test_metric_kfold(model, metric, title, metricname):
+    """
+    Create a plot showing the evolution of the same metric evaluated during epochs on train set & holdout set for
+    k-fold cross validation.
+
+    :param model: the model to use, either 'cnn' or 'dnn'
+    :param metric: which metric to plot: either 'acc' or 'loss'
+    :param title: string for the plot title & output filename.
+    :param metricname: string for ylabel
+    :return: None, plot saved to file.
+    """
+    # load specified metric from specified model from file
+    mean_metric = np.loadtxt('output/metrics_evolution/{}_mean_{}.csv'.format(model, metric))
+    std_metric = np.loadtxt('output/metrics_evolution/{}_std_{}.csv'.format(model, metric))
+    # same for validation data
+    mean_val_metric = np.loadtxt('output/metrics_evolution/{}_mean_val_{}.csv'.format(model, metric))
+    std_val_metric = np.loadtxt('output/metrics_evolution/{}_std_val_{}.csv'.format(model, metric))
+
+    plt.style.use('ggplot')
+    plt.grid(b=True)
+
+    plt.plot(mean_metric, color='crimson', label='train')
+    plt.fill_between(range(1, 401), mean_metric - std_metric, mean_metric + std_metric, alpha=0.1, color="crimson")
+
+    plt.plot(mean_val_metric, color='mediumseagreen', label='test')
+    plt.fill_between(range(1, 401), mean_val_metric - std_val_metric, mean_val_metric + std_val_metric, alpha=0.1, color="mediumseagreen")
+    plt.title(title)
+    plt.ylabel(metricname)
+    plt.xlabel('epoch')
+    plt.legend(loc='best')
+
+    # Create directory to store pdf files.
+    directory = os.path.join(os.getcwd(), 'output/plots/')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    plt.savefig('output/plots/{}.png'.format(title), bbox_layout='tight', dpi=300)
+    plt.clf()
+
+    print('{} plot saved to file.'.format(title))
+
+
+def plot_sample(model):
     """
     Plot the predicted center & main orientation on a sample image randomly drawn from the test set.
     Also plot ground truth center & main orientation for reference
 
     :param model: the model to use, either 'cnn' or 'dnn'
-    :param phase: indicates which phase to select, either 'ED' or 'ES'
 
     :return: matplotlib.pyplot saved to file.
     """
@@ -151,14 +192,14 @@ def plot_sample(model, phase='ED'):
 
     plt.axis('equal')
     plt.legend()
-    plt.title('Predicted center & orientation vs GT.\n Model = {} , Phase = {}'.format(model.upper(), phase))
+    plt.title('Predicted center & orientation vs GT.\n Model = {}'.format(model.upper()))
 
     # Create directory to store pdf files.
     directory = os.path.join(os.getcwd(), 'output/plots/')
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    plt.savefig("output/plots/sample_image_{m}_{i}_{p}.png".format(m=model.upper(), i=sample, p=phase), bbox_inches='tight', dpi=300)
+    plt.savefig("output/plots/sample_image_{m}_{i}.png".format(m=model.upper(), i=sample), bbox_inches='tight', dpi=300)
     print('Sample image plot saved to file.')
     plt.show()
     plt.clf()

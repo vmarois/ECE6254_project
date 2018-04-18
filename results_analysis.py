@@ -136,7 +136,7 @@ def boxPlotAngle(img_rows=128, img_cols=128):
 
 
 if __name__ == '__main__':
-
+    """
     # plot loss evolution of DNN model
     plot_train_test_metric('output/metrics_evolution/dnn_model_loss.csv', 'output/metrics_evolution/dnn_model_val_loss.csv', 'DNN Loss Evolution', 'Loss')
 
@@ -157,3 +157,5 @@ if __name__ == '__main__':
     boxPlotDistance()
 
     boxPlotAngle()
+    """
+    plot_train_test_metric_kfold(title='DNN 5-fold CV Accuracy Evolution')
