@@ -171,6 +171,7 @@ def train_dnn_model_kfold():
     losses = []
     val_accs = []
     val_losses = []
+    test_scores = []
 
     for idx, (train, test) in enumerate(splits):
         print('\nFold n° ', idx+1)
@@ -187,6 +188,7 @@ def train_dnn_model_kfold():
         score = model.evaluate(X_test, y_test, verbose=1)
         print('Test mean squared error:', score[0])
         print('Test accuracy:', score[1])
+        test_scores.append(score[1])
 
         # save metrics evolution to file
         accs.append(history.history['acc'])
@@ -208,6 +210,10 @@ def train_dnn_model_kfold():
     mean_val_losses = np.mean(np.array(val_losses), axis=0)
     std_val_losses = np.std(np.array(val_losses), axis=0)
 
+    mean_test_acc = np.mean(test_scores)*100
+    std_test_acc = np.std(test_scores)*100
+    print('\nAverage test accuracy: %.2f%% (+/- %.2f%%)' % (mean_test_acc, std_test_acc))
+
     # Create directory to store metrics evolution to file.
     directory = os.path.join(os.getcwd(), 'output/metrics_evolution/')
     if not os.path.exists(directory):
@@ -225,7 +231,7 @@ def train_dnn_model_kfold():
     np.savetxt('output/metrics_evolution/dnn_std_val_acc.csv', std_val_acc)
     np.savetxt('output/metrics_evolution/dnn_std_val_loss.csv', std_val_losses)
 
-    print('Saved metrics evolution during training to file.')
+    print('\nSaved metrics evolution during training to file.')
 
 
 def train_cnn_model(weights=True):
@@ -321,6 +327,7 @@ def train_cnn_model_kfold():
     losses = []
     val_accs = []
     val_losses = []
+    test_scores = []
 
     for idx, (train, test) in enumerate(splits):
         print('\nFold n° ', idx + 1)
@@ -345,6 +352,7 @@ def train_cnn_model_kfold():
         score = model.evaluate(X_test, y_test, verbose=1)
         print('Test mean squared error:', score[0])
         print('Test accuracy:', score[1])
+        test_scores.append(score[1])
 
         # save metrics evolution to file
         accs.append(history.history['acc'])
@@ -366,6 +374,10 @@ def train_cnn_model_kfold():
     mean_val_losses = np.mean(np.array(val_losses), axis=0)
     std_val_losses = np.std(np.array(val_losses), axis=0)
 
+    mean_test_acc = np.mean(test_scores) * 100
+    std_test_acc = np.std(test_scores) * 100
+    print('\nAverage test accuracy: %.2f%% (+/- %.2f%%)' % (mean_test_acc, std_test_acc))
+
     # Create directory to store metrics evolution to file.
     directory = os.path.join(os.getcwd(), 'output/metrics_evolution/')
     if not os.path.exists(directory):
@@ -383,12 +395,12 @@ def train_cnn_model_kfold():
     np.savetxt('output/metrics_evolution/cnn_std_val_acc.csv', std_val_acc)
     np.savetxt('output/metrics_evolution/cnn_std_val_loss.csv', std_val_losses)
 
-    print('Saved metrics evolution during training to file.')
+    print('\nSaved metrics evolution during training to file.')
 
 
 if __name__ == '__main__':
     #train_cnn_model(weights=False)
+    #train_dnn_model(weights=False)
 
     #train_dnn_model_kfold()
-
     train_cnn_model_kfold()
