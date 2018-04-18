@@ -158,4 +158,6 @@ if __name__ == '__main__':
 
     boxPlotAngle()
     """
-    plot_train_test_metric_kfold(title='DNN 5-fold CV Accuracy Evolution')
+    #plot_train_test_metric_kfold(model='dnn', metric='acc', title='DNN 5-fold CV Accuracy Evolution', metricname='Accuracy')
+    plot_train_test_metric_kfold(model='cnn', metric='acc', title='CNN 5-fold CV Accuracy Evolution',
+                                 metricname='Accuracy')
