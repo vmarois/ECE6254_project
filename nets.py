@@ -60,6 +60,9 @@ def cnn_model():
     model.compile(loss='mse', optimizer=sgd, metrics=['acc'])
 
     print('Created CNN model.')
+    print('\Model Summary:\n')
+    print(model.summary())
+
     return model
 
 
@@ -83,6 +86,8 @@ def dnn_model():
     model.compile(loss='mse', optimizer=sgd, metrics=['acc'])
 
     print('Created DNN model.')
+    print('\Model Summary:\n')
+    print(model.summary())
 
     return model
 
@@ -399,8 +404,9 @@ def train_cnn_model_kfold():
 
 
 if __name__ == '__main__':
-    #train_cnn_model(weights=False)
-    #train_dnn_model(weights=False)
+    train_cnn_model(weights=False)
+    train_dnn_model(weights=False)
 
-    #train_dnn_model_kfold()
+    # use 5-fold cross validation (for learning curves plots)
+    train_dnn_model_kfold()
     train_cnn_model_kfold()
