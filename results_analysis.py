@@ -136,7 +136,7 @@ def boxPlotAngle(img_rows=128, img_cols=128):
 
 
 if __name__ == '__main__':
-    """
+
     # plot loss evolution of DNN model
     plot_train_test_metric('output/metrics_evolution/dnn_model_loss.csv', 'output/metrics_evolution/dnn_model_val_loss.csv', 'DNN Loss Evolution', 'Loss')
 
@@ -152,13 +152,20 @@ if __name__ == '__main__':
     plot_train_test_metric('output/metrics_evolution/cnn_model_acc.csv',
                            'output/metrics_evolution/cnn_model_val_acc.csv', 'CNN Accuracy Evolution', 'Accuracy')
 
+    # plot a sample result
     plot_sample(model='dnn')
-    
+
+    # create boxplot of distance to true center
     boxPlotDistance()
 
+    # create boxplot of orientation angle difference
     boxPlotAngle()
-    """
-    plot_train_test_metric_kfold(model='cnn', metric='acc', title='DNN 5-fold CV Accuracy Evolution (With Dropout)',
+
+    # plot 5-fold learning curves
+    plot_train_test_metric_kfold(model='cnn', metric='acc', title='CNN 5-fold CV Accuracy Evolution (No Dropout)',
                                  metricname='Accuracy', nb_epochs=400)
-    plot_train_test_metric_kfold(model='cnn', metric='loss', title='DNN 5-fold CV Loss Evolution (With Dropout)',
+    plot_train_test_metric_kfold(model='cnn', metric='loss', title='CNN 5-fold CV Loss Evolution (No Dropout)',
                                  metricname='Loss', nb_epochs=400)
+
+    # plot filters with non-neg loss of 1st conv layer
+    vis_filters(layer='conv2d_1', img_width=128, img_height=128)

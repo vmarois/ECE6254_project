@@ -33,6 +33,8 @@ def data_augmentation_pipeline(img_rows=128, img_cols=128,
     :param blur: flag to apply or not gaussian blur on the dataset. If yes:
         - Apply a blur with sigma = 0.6. No need to apply this modification on the segmentation masks.
 
+    :param img_rows, img_cols: image dimensions
+
     Resize the images & masks to (img_rows, img_cols).
     The images & their variants are stored into different .npy files.
     """
