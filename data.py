@@ -14,9 +14,11 @@ from helpers import *
 def create_dataset(img_rows=128, img_cols=128):
     """
     Loop over the data/ directory to retrieve each image & its associated ground truth segmentation mask.
-    Resizes the images & masks to (img_rows, img_cols) & stores them into 2 np.ndarrays.
-    Also writes these 2 np.ndarrays to .npy files for faster loading when reusing them.
-    :return: images np.ndarrays, masks np.ndarray
+    Writes these 2 np.ndarrays to .npy files for faster loading when reusing them.
+
+    :param img_rows, img_cols: resize images to these dimensions.
+
+    :return: images np.ndarrays, masks np.ndarray saved to file.
     """
     print('Creating original dataset from the raw data')
     # first, get the patients directory names located in the data/ directory. These names (e.g. 'patient0001') will
@@ -73,6 +75,7 @@ def concatenate_datasets(filenames_list, img_rows=128, img_cols=128):
     :param filenames_list: list of tuples specifying the pairs of images & masks:
         [(images, masks), (rotated_images, rotated_masks)..]
     :param img_rows, img_cols: images dimensions
+
     :return: whole set of images + ground truth values for center, orientation saved to .npy files
     """
     print('Concatenating the datasets created by data augmentation into a single one')
@@ -84,7 +87,7 @@ def concatenate_datasets(filenames_list, img_rows=128, img_cols=128):
     n_samples = 600 * len(filenames_list)
 
     # create np.ndarrays for the images and the targets: xCenter, yCenter, xOrientation, yOrientation
-    images_dataset = np.ndarray((n_samples, 128, 128), dtype=np.uint8)
+    images_dataset = np.ndarray((n_samples, img_rows, img_cols), dtype=np.uint8)
     targets_dataset = np.ndarray((n_samples, 4), dtype=np.float32)
 
     for ds, (img, mask) in enumerate(filenames_list):
@@ -134,77 +137,16 @@ def concatenate_datasets(filenames_list, img_rows=128, img_cols=128):
     print('output/processed_data/targets_test.npy')
 
 
-def concatenate_datasets_seg(filenames_list, img_rows=128, img_cols=128):
-    """
-    Concatenate the datasets (.npy files) contained in output/augmented_data into 1 for the segmentation net.
-
-    :param filenames_list: list of tuples specifying the pairs of images & masks:
-        [(images, masks), (rotated_images, rotated_masks)..]
-    :param img_rows, img_cols: images dimensions
-    :return: whole set of images + ground truth values for center, orientation saved to .npy files
-    """
-
-    print('Concatenating the datasets created by data augmentation into a single one')
-    print('Using the following pairs of images / masks datasets: ')
-    print(filenames_list)
-    print('\n')
-
-    # total number of images
-    n_samples = 600 * len(filenames_list)
-
-    # create np.ndarrays for the images and the targets: xCenter, yCenter, xOrientation, yOrientation
-    images_dataset = np.ndarray((n_samples, 128, 128), dtype=np.uint8)
-    targets_dataset = np.ndarray((n_samples, 128, 128), dtype=np.uint8)
-
-    for ds, (img, mask) in enumerate(filenames_list):
-        print(" Processing {}".format(img))
-        images = np.load("output/augmented_data/{}.npy".format(img))
-        masks = np.load("output/augmented_data/{}.npy".format(mask))
-
-        for idx, mat in enumerate(masks):
-
-            # save mask in main dataset file
-            targets_dataset[ds*600 + idx] = mat
-
-            # save image in main dataset file
-            images_dataset[ds*600 + idx] = images[idx]
-
-    print('Concatenated all datasets into one & created target values for (center, orientation)')
-
-    print('Splitting the dataset into 70% training & 30% testing')
-    images_train, images_test, targets_train, targets_test = train_test_split(images_dataset, targets_dataset,
-                                                                              test_size=0.3,
-                                                                              random_state=42,
-                                                                              shuffle=True)
-
-    # save all ndarrays to a .npy files (for faster loading later)
-    # Create directory to store files.
-    directory = os.path.join(os.getcwd(), 'output/processed_data/')
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-    # save training set to file
-    np.save('output/processed_data/seg_images_train.npy', images_train)
-    np.save('output/processed_data/seg_targets_train.npy', targets_train)
-
-    # save testing set to file
-    np.save('output/processed_data/seg_images_test.npy', images_test)
-    np.save('output/processed_data/seg_targets_test.npy', targets_test)
-    print('Saving to .npy files done. See files: ')
-    print('output/processed_data/seg_images_train.npy')
-    print('output/processed_data/seg_targets_train.npy')
-    print('output/processed_data/seg_images_test.npy')
-    print('output/processed_data/seg_targets_test.npy')
-
-
 def load_data(model, set='train', img_rows=128, img_cols=128):
     """
     Loading training data & doing some additional preprocessing on it. If the indicated model is a dnn, we flatten out
     the input images. If the indicated model is a cnn, we put the channels first.
+
     :param model: string to indicate the type of model to prepare the data for. Either 'dnn' or 'cnn'
     :param set: string to specify whether we load the training or testing data
-    :param img_rows: the new x-axis dimension used to resize the images
-    :param img_cols: the new y-axis dimension used to resize the images
+    :param img_rows: the new x-axis dimension used to reshape the images
+    :param img_cols: the new y-axis dimension used to reshape the images
+
     :return: images & target features as numpy arrays.
     """
     print('#' * 30)
@@ -239,42 +181,10 @@ def load_data(model, set='train', img_rows=128, img_cols=128):
     return images_train, targets_train
 
 
-def load_data_seg(set='train', img_rows=128, img_cols=128):
-    """
-    Loading training data for the Segmentation CNN & doing some additional preprocessing on it. Putting the channels first.
-    :param set: string to specify whether we load the training or testing data
-    :param img_rows: the new x-axis dimension used to resize the images
-    :param img_cols: the new y-axis dimension used to resize the images
-    :return: images & target features as numpy arrays.
-    """
-    print('#' * 30)
-    print('Loading {} data from file.'.format(set))
-
-    # read in the .npy file containing the images
-    images_train = np.load('output/processed_data/seg_images_{}.npy'.format(set))
-
-    # read in the .npy file containing the target features
-    targets_train = np.load('output/processed_data/seg_targets_{}.npy'.format(set))
-
-    # scale image pixel values to [0, 1]
-    images_train = images_train.astype(np.float32)
-    images_train /= 255.
-
-    # reshape images according to the neural network model intended to be used
-    print('Reshaping images with channels first.')
-    images_train = images_train.reshape(-1, 1, img_rows, img_cols)
-    targets_train = targets_train.reshape(-1, 1, img_rows, img_cols)
-
-    print('Loading done. Pixel values have been scaled to [0, 1] and target center coordinates to [-1, 1].')
-    print('#' * 30)
-
-    return images_train, targets_train
-
-
 if __name__ == '__main__':
     #create_dataset(img_rows=128, img_cols=128)
 
-    #data_augmentation_pipeline(img_rows=128, img_cols=128,rotation=True,shift=True,flip=True,contrast=True,blur=True)
+    data_augmentation_pipeline(img_rows=128, img_cols=128,rotation=True,shift=True,flip=True,contrast=True,blur=True)
 
     filenames_list = [('images', 'masks'),
                       ('rotated_images', 'rotated_masks'),
@@ -284,5 +194,3 @@ if __name__ == '__main__':
                       ('blurred_images', 'masks')]
 
     concatenate_datasets(filenames_list=filenames_list)
-
-    plot_data_augmentation()
